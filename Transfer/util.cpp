@@ -21,7 +21,7 @@ char* get_filename(char* p)
 
 const char* get_prompt_filename(char *prompt) {
     std::string prompt_string(prompt);
-    std::regex filename_pattern("∑¢ÀÕ¡À(.*),");
+    std::regex filename_pattern("you (.*),");
     std::smatch matches;
     const char* prompt_filename = NULL;
     if (std::regex_search(prompt_string, matches, filename_pattern)) {
@@ -152,6 +152,7 @@ void receive_file() {
     send_addr_len = sizeof(send_addr);
     while (1) {
         memset(file_content, '\0', sizeof(file_content));
+        memset(prompt, '\0', sizeof(prompt));
         send_sock = accept(recv_sock, (struct sockaddr*)&send_addr, &send_addr_len);
         if (send_sock == INVALID_SOCKET) {
             printf("accept() error\n");
