@@ -38,7 +38,10 @@ bool is_receive(SOCKET sock, char * file_full_path) {
     char yes[4] = "yes";
     size_t str_len;
     char *filename = get_filename(file_full_path);
-    char* prompt = (char *)malloc(strlen(USERNAME) + strlen(SEND_PROMPT1) + strlen(filename) + strlen(SEND_PROMPT2));
+    size_t prompt_len = strlen(USERNAME) + strlen(SEND_PROMPT1) + strlen(filename) + strlen(SEND_PROMPT2);
+    char* prompt = (char*)malloc(prompt_len);
+    memset(prompt, '\0', prompt_len);
+
     strcat(prompt, USERNAME);
     strcat(prompt, SEND_PROMPT1);
     strcat(prompt, filename);
