@@ -41,6 +41,7 @@ int main() {
         else {
             state = OTHER_STATE;
         }
+        Sleep(20);
     }
     send_thread.join();
     recv_thread.join();
