@@ -10,6 +10,10 @@
 #include <string>
 #include <thread>
 #include <regex>
+#include <filesystem>
+#include <stdlib.h>
+#include <Windows.h>
+#include <io.h>
 
 extern int state;
 
@@ -75,37 +79,48 @@ void send_file() {
     struct sockaddr_in recv_addr;
     while (1) {
         //if (state == SEND_STATE) {
-            // 还需判断IP的有效性
+            
         memset(flag, '\0', sizeof(flag));
         scanf("%s", flag);
         if (strcmp(flag, SEND_FLAG) == 0) {
             printf("请输入你要连接的目的IP：");
             scanf("%s", addr);
 
-            // 需判断文件绝对路径的有效性
+            // 还需判断IP的有效性
+            
             printf("请输入你要传输文件的绝对路径：");
             scanf("%s", full_path);
+            // 需判断文件绝对路径的有效性
+            if (_access(full_path, 0) == 0 && _access(full_path, 6) == 0) {
+                memset(&recv_addr, 0, sizeof(recv_addr));
+                recv_addr.sin_family = AF_INET;
+                recv_addr.sin_addr.s_addr = inet_addr(addr);
+                recv_addr.sin_port = htons(atoi(PORT));
 
-            memset(&recv_addr, 0, sizeof(recv_addr));
-            recv_addr.sin_family = AF_INET;
-            recv_addr.sin_addr.s_addr = inet_addr(addr);
-            recv_addr.sin_port = htons(atoi(PORT));
+                if (connect(send_sock, (struct sockaddr*)&recv_addr, sizeof(recv_addr)) == -1) {
+                    //char message[] = "connect() error";
+                    //error_handling(message);
+                    printf("connect() error\n");
+                    continue;
+                }
+                char* file_content = get_file_content(full_path);
+                char* file_name = get_filename(full_path);
 
-            if (connect(send_sock, (struct sockaddr*)&recv_addr, sizeof(recv_addr)) == -1) {
-                //char message[] = "connect() error";
-                //error_handling(message);
-                printf("connect() error\n");
-                continue;
+                //printf("file_name : %s", file_name);
+                //printf("strlen(file_name): %d", strlen(file_name));
+                send(send_sock, file_name, strlen(file_name), 0);
+                Sleep(3);
+
+                send(send_sock, file_content, file_size, 0);
+                printf("发送成功\n");
             }
-            char* file_content = get_file_content(full_path);
-            char* file_name = get_filename(full_path);
+            else if(_access(full_path, 0) != 0){
+                printf("文件不存在\n");
+            }
+            else if (_access(full_path, 6) != 0) {
+                printf("文件不可读\n");
+            }
 
-            printf("file_name : %s", file_name);
-            printf("sizeof(*file_name): %d", strlen(file_name));
-            send(send_sock, file_name, strlen(file_name), 0);
-            Sleep(3);
-
-            send(send_sock, file_content, file_size, 0);
         }
         else {
             printf("输入错误，请重新输入");

@@ -13,7 +13,6 @@
 int main() {
 
     WSADATA wsa;
-    // LocalNetworkStrategy* locals = new LocalNetworkStrategy();
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
         printf("WSAStartup");
         return 0;
