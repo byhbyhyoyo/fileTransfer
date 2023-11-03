@@ -72,7 +72,6 @@ void send_file() {
     char full_path[100];
 
     struct sockaddr_in recv_addr;
-    char flag[5];
     while (1) {
         if (state == SEND_STATE) {
             // 还需判断IP的有效性
@@ -114,8 +113,6 @@ void receive_file() {
     int str_len;
     char file_content[10000];
     char prompt[100];
-    char flag[4];
-    char yes_flag[4];
     recv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);  // 注意此处与Linux不同
     if (recv_sock == INVALID_SOCKET)
     {
@@ -157,7 +154,7 @@ void receive_file() {
         printf("%s", prompt);
 
         if (state == RECV_STATE) {
-            send(recv_sock, YES_FLAG, sizeof(flag), 0);
+            send(recv_sock, YES_FLAG, sizeof(YES_FLAG), 0);
             const char* file_name = get_prompt_filename(prompt);
             str_len = recv(send_sock, file_content, sizeof(file_content) - 1, 0);
             if (str_len <= 0) {
