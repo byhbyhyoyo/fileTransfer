@@ -17,9 +17,6 @@ int main() {
         printf("WSAStartup");
         return 0;
     }
-    else {
-        printf("初始化套接字库成功\n");
-    }
     printf("-------------你已经成功上线，你的用户名是%s--------------\n",USERNAME);
     printf("-------------若你需要传输文件，请输入%s, 并按回车--------------\n", SEND_FLAG);
     char flag[5];

@@ -65,22 +65,17 @@ bool is_receive(SOCKET sock, char * file_full_path) {
 }
 void send_file() {
 
-    SOCKET send_sock;
+    
     char flag[5];
-
-    send_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (send_sock == INVALID_SOCKET) {
-        printf("socket");
-        return;
-    }
     char addr[20];
     char full_path[100];
 
-    struct sockaddr_in recv_addr;
+
     while (1) {
         //if (state == SEND_STATE) {
             
         memset(flag, '\0', sizeof(flag));
+        memset(full_path, '\0', sizeof(full_path));
         scanf("%s", flag);
         if (strcmp(flag, SEND_FLAG) == 0) {
             printf("请输入你要连接的目的IP：");
@@ -92,26 +87,7 @@ void send_file() {
             scanf("%s", full_path);
             // 需判断文件绝对路径的有效性
             if (_access(full_path, 0) == 0 && _access(full_path, 6) == 0) {
-                memset(&recv_addr, 0, sizeof(recv_addr));
-                recv_addr.sin_family = AF_INET;
-                recv_addr.sin_addr.s_addr = inet_addr(addr);
-                recv_addr.sin_port = htons(atoi(PORT));
-
-                if (connect(send_sock, (struct sockaddr*)&recv_addr, sizeof(recv_addr)) == -1) {
-                    //char message[] = "connect() error";
-                    //error_handling(message);
-                    printf("connect() error\n");
-                    continue;
-                }
-                char* file_content = get_file_content(full_path);
-                char* file_name = get_filename(full_path);
-
-                //printf("file_name : %s", file_name);
-                //printf("strlen(file_name): %d", strlen(file_name));
-                send(send_sock, file_name, strlen(file_name), 0);
-                Sleep(3);
-
-                send(send_sock, file_content, file_size, 0);
+                send_to_target(full_path, addr);
                 printf("发送成功\n");
             }
             else if(_access(full_path, 0) != 0){
@@ -138,6 +114,35 @@ void send_file() {
         //    state = OTHER_STATE;   //涉及到对共享区的操作，应上锁
         //}
     }
+}
+void send_to_target(char *full_path, char *addr) {
+    SOCKET send_sock;
+    struct sockaddr_in recv_addr;
+    send_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (send_sock == INVALID_SOCKET) {
+        printf("socket");
+        return;
+    }
+    memset(&recv_addr, 0, sizeof(recv_addr));
+    recv_addr.sin_family = AF_INET;
+    recv_addr.sin_addr.s_addr = inet_addr(addr);
+    recv_addr.sin_port = htons(atoi(PORT));
+
+    if (connect(send_sock, (struct sockaddr*)&recv_addr, sizeof(recv_addr)) == -1) {
+        //char message[] = "connect() error";
+        //error_handling(message);
+        printf("connect() error\n");
+        return;
+    }
+    char* file_content = get_file_content(full_path);
+    char* file_name = get_filename(full_path);
+
+    //printf("file_name : %s", file_name);
+    //printf("strlen(file_name): %d", strlen(file_name));
+    send(send_sock, file_name, strlen(file_name), 0);
+    Sleep(3);
+
+    send(send_sock, file_content, file_size, 0);
 }
 
 void receive_file() {
@@ -188,7 +193,7 @@ void receive_file() {
             printf("recv() error - prompt\n");
             return;
         }
-        printf("file_name: %s", file_name);
+        //printf("file_name: %s\n", file_name);
         //printf("%s", prompt);
 
         //if (state == RECV_STATE) {
@@ -204,10 +209,9 @@ void receive_file() {
         char full_path[100] = "";
         strcat(full_path, RES_PATH);
         strcat(full_path, file_name);
-        printf("full_path: %s\n", full_path);
         write_file(full_path, file_content, str_len);
         printf("接收文件成功，文件保存至：%s\n", full_path);
-        printf("message from client : %s \n", file_content);
+        //printf("file client : %s \n", file_content);
         // write(clnt_sock, message, sizeof(message));
         closesocket(send_sock);
 
@@ -230,12 +234,12 @@ char* get_file_content(char* full_path) {
     fp = fopen(full_path, "r");
     fseek(fp, 0, SEEK_END);
     file_size = ftell(fp);
-    printf("文件字符数为 %d\n", file_size);
+    //printf("文件字符数为 %d\n", file_size);
     tmp = (char*)malloc(file_size * sizeof(char));
     memset(tmp, '\0', file_size * sizeof(char));
     fseek(fp, 0, SEEK_SET);
     fread(tmp, sizeof(char), file_size, fp);
-    printf("文件内容为：\n%s", tmp);
+    //printf("文件内容为：\n%s", tmp);
     fclose(fp);
     return tmp;
 }
