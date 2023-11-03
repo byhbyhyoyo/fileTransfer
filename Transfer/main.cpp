@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "util.h"
 #include "config.h"
 #include <stdio.h>
@@ -6,6 +8,8 @@
 // 要求输入是IP号（可输入多组），端口号固定  
 // 
 int state = OTHER_STATE;
+
+
 int main() {
 
     WSADATA wsa;
@@ -15,9 +19,9 @@ int main() {
         return 0;
     }
     else {
-        printf("初始化套接字库成功");
+        printf("初始化套接字库成功\n");
     }
-    printf("-------------你已经成功上线，你的用户名是%s--------------",USERNAME);
+    printf("-------------你已经成功上线，你的用户名是%s--------------\n",USERNAME);
     printf("-------------若你需要传输文件，请输入%s, 并按回车--------------\n", SEND_FLAG);
     char flag[5];
     memset(flag, '\0', sizeof(flag));

@@ -13,7 +13,7 @@ const static char NO_FLAG[] = "no";
 const static char USERNAME[] = "Bao yang hao";
 const static char SEND_PROMPT1[] = " send to you ";
 const static char SEND_PROMPT2[] = ", do you want to receive£¿£¨please input yes or no£©:";
-std::regex FILENAME_PATTERN("you (.*),");
+static std::regex FILENAME_PATTERN("you (.*),");
 
 const static int OTHER_STATE = 0;
 const static int RECV_STATE = 1;

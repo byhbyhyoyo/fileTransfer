@@ -12,6 +12,7 @@
 #include <regex>
 
 extern int state;
+
 char* get_filename(char* p)
 {
     char ch = '\\';
@@ -173,7 +174,7 @@ void receive_file() {
             state = OTHER_STATE;
         }
         else if (state == NO_RECV_STATE) {
-            send(recv_sock, NO_FLAG, sizeof(flag), 0);
+            send(recv_sock, NO_FLAG, sizeof(NO_FLAG), 0);
             state = OTHER_STATE;
         }
     }
