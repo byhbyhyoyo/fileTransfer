@@ -78,17 +78,30 @@ void send_file() {
         memset(full_path, '\0', sizeof(full_path));
         scanf("%s", flag);
         if (strcmp(flag, SEND_FLAG) == 0) {
-            printf("请输入你要连接的目的IP：");
-            scanf("%s", addr);
+            int n;
+            printf("请输入需要接收文件的用户个数：");
+            scanf("%d", &n);
 
+            if (n > MAX_IP_ADDRESSES) {
+                printf("输入的数量超过了数组的最大容量 %d\n", MAX_IP_ADDRESSES);
+            }
+            printf("请输入他们的IP地址(若多个IP，每个IP占一行)：\n");
+            char ip_addrs[MAX_IP_ADDRESSES][20];
             // 还需判断IP的有效性
+            for (int i = 0; i < n; ++i) {
+                scanf("%s", ip_addrs[i]);
+            }
             
+
             printf("请输入你要传输文件的绝对路径：");
             scanf("%s", full_path);
+            char* file_name = get_filename(full_path);
             // 需判断文件绝对路径的有效性
             if (_access(full_path, 0) == 0 && _access(full_path, 6) == 0) {
-                send_to_target(full_path, addr);
-                printf("发送成功\n");
+                for (int i = 0; i < n; ++i) {
+                    if (send_to_target(full_path, ip_addrs[i]) == true) printf("发送文件%s至%s成功\n", file_name, ip_addrs[i]);
+                    else printf("发送文件%s至%s失败\n", file_name, ip_addrs[i]);
+                }
             }
             else if(_access(full_path, 0) != 0){
                 printf("文件不存在\n");
@@ -96,10 +109,10 @@ void send_file() {
             else if (_access(full_path, 6) != 0) {
                 printf("文件不可读\n");
             }
-
         }
         else {
-            printf("输入错误，请重新输入");
+            printf("输入错误，请重新输入\n");
+            continue;
         }
 
 
@@ -115,13 +128,14 @@ void send_file() {
         //}
     }
 }
-void send_to_target(char *full_path, char *addr) {
+// 返回值表示发送成功或失败
+bool send_to_target(char *full_path, char *addr) {
     SOCKET send_sock;
     struct sockaddr_in recv_addr;
     send_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (send_sock == INVALID_SOCKET) {
         printf("socket");
-        return;
+        return false;
     }
     memset(&recv_addr, 0, sizeof(recv_addr));
     recv_addr.sin_family = AF_INET;
@@ -132,7 +146,7 @@ void send_to_target(char *full_path, char *addr) {
         //char message[] = "connect() error";
         //error_handling(message);
         printf("connect() error\n");
-        return;
+        return false;
     }
     char* file_content = get_file_content(full_path);
     char* file_name = get_filename(full_path);
@@ -143,6 +157,7 @@ void send_to_target(char *full_path, char *addr) {
     Sleep(3);
 
     send(send_sock, file_content, file_size, 0);
+    return true;
 }
 
 void receive_file() {

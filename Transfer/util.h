@@ -12,5 +12,5 @@ void send_file();
 void receive_file();
 char* get_file_content(char* full_path);
 void write_file(char* full_path, char* file_content, int file_content_len);
-void send_to_target(char* full_path, char* addr);
+bool send_to_target(char* full_path, char* addr);
 #endif
