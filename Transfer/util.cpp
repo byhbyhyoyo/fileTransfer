@@ -173,6 +173,7 @@ void receive_file() {
             printf("recv() error - prompt\n");
             return;
         }
+        printf("file_name: %s", file_name);
         //printf("%s", prompt);
 
         //if (state == RECV_STATE) {
