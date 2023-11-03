@@ -62,7 +62,7 @@ bool is_receive(SOCKET sock, char * file_full_path) {
 void send_file() {
 
     SOCKET send_sock;
-
+    char flag[5];
 
     send_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (send_sock == INVALID_SOCKET) {
@@ -74,8 +74,11 @@ void send_file() {
 
     struct sockaddr_in recv_addr;
     while (1) {
-        if (state == SEND_STATE) {
+        //if (state == SEND_STATE) {
             // 还需判断IP的有效性
+        memset(flag, '\0', sizeof(flag));
+        scanf("%s", flag);
+        if (strcmp(flag, SEND_FLAG) == 0) {
             printf("请输入你要连接的目的IP：");
             scanf("%s", addr);
 
@@ -91,18 +94,32 @@ void send_file() {
             if (connect(send_sock, (struct sockaddr*)&recv_addr, sizeof(recv_addr)) == -1) {
                 //char message[] = "connect() error";
                 //error_handling(message);
-                printf("connect() error");
+                printf("connect() error\n");
+                continue;
             }
-            if (is_receive(send_sock, full_path)) {
-                char* file_content = get_file_content(full_path);
-                send(send_sock, file_content, file_size, 0);
-            }
-            else {
-                printf("对方拒绝了你的文件传输请求");
-            }
+            char* file_content = get_file_content(full_path);
+            char* file_name = get_filename(full_path);
 
-            state = OTHER_STATE;   //涉及到对共享区的操作，应上锁
+            send(send_sock, file_name, sizeof(*file_name), 0);
+            Sleep(3);
+
+            send(send_sock, file_content, file_size, 0);
         }
+        else {
+            printf("输入错误，请重新输入");
+        }
+
+
+
+            //if (is_receive(send_sock, full_path)) {
+
+            //}
+            //else {
+            //    printf("对方拒绝了你的文件传输请求");
+            //}
+
+        //    state = OTHER_STATE;   //涉及到对共享区的操作，应上锁
+        //}
     }
 }
 
@@ -114,6 +131,7 @@ void receive_file() {
     int str_len;
     char file_content[10000];
     char prompt[100];
+    char file_name[50];
     recv_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);  // 注意此处与Linux不同
     if (recv_sock == INVALID_SOCKET)
     {
@@ -140,43 +158,46 @@ void receive_file() {
     send_addr_len = sizeof(send_addr);
     while (1) {
         memset(file_content, '\0', sizeof(file_content));
-        memset(prompt, '\0', sizeof(prompt));
+        memset(file_name, '\0', sizeof(file_name));
+        /*memset(prompt, '\0', sizeof(prompt));*/
         send_sock = accept(recv_sock, (struct sockaddr*)&send_addr, &send_addr_len);
         if (send_sock == INVALID_SOCKET) {
             printf("accept() error\n");
             return;
         }
 
-        str_len = recv(send_sock, prompt, sizeof(prompt) - 1, 0);
+        str_len = recv(send_sock, file_name, sizeof(file_name) - 1, 0);
         if (str_len <= 0) {
             printf("recv() error - prompt\n");
             return;
         }
-        printf("%s", prompt);
+        //printf("%s", prompt);
 
-        if (state == RECV_STATE) {
-            send(recv_sock, YES_FLAG, sizeof(YES_FLAG), 0);
-            const char* file_name = get_prompt_filename(prompt);
-            str_len = recv(send_sock, file_content, sizeof(file_content) - 1, 0);
-            if (str_len <= 0) {
-                printf("recv() error - file content\n");
-                return;
-            }
-            char full_path[100] = "";
-            strcat(full_path, RES_PATH);
-            strcat(full_path, file_name);
-            write_file(full_path, file_content, str_len);
-            printf("接收文件成功，文件保存至：%s\n", full_path);
-            printf("message from client : %s \n", file_content);
-            // write(clnt_sock, message, sizeof(message));
-            closesocket(send_sock);
+        //if (state == RECV_STATE) {
+        //send(recv_sock, YES_FLAG, sizeof(YES_FLAG), 0);
+        //const char* file_name = get_prompt_filename(prompt);
+        Sleep(1);
 
-            state = OTHER_STATE;
+        str_len = recv(send_sock, file_content, sizeof(file_content) - 1, 0);
+        if (str_len <= 0) {
+            printf("recv() error - file content\n");
+            return;
         }
-        else if (state == NO_RECV_STATE) {
-            send(recv_sock, NO_FLAG, sizeof(NO_FLAG), 0);
-            state = OTHER_STATE;
-        }
+        char full_path[100] = "";
+        strcat(full_path, RES_PATH);
+        strcat(full_path, file_name);
+        write_file(full_path, file_content, str_len);
+        printf("接收文件成功，文件保存至：%s\n", full_path);
+        printf("message from client : %s \n", file_content);
+        // write(clnt_sock, message, sizeof(message));
+        closesocket(send_sock);
+
+        //    state = OTHER_STATE;
+        //}
+        //else if (state == NO_RECV_STATE) {
+        //    send(recv_sock, NO_FLAG, sizeof(NO_FLAG), 0);
+        //    state = OTHER_STATE;
+        //}
     }
     // 关闭套接字
     closesocket(recv_sock);

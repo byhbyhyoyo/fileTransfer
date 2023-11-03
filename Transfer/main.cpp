@@ -7,7 +7,7 @@
 
 // 要求输入是IP号（可输入多组），端口号固定  
 // 
-int state = OTHER_STATE;
+//int state = OTHER_STATE;
 
 
 int main() {
@@ -28,21 +28,22 @@ int main() {
 
     std::thread send_thread(send_file);
     std::thread recv_thread(receive_file);
-    while (scanf("%s", flag) != EOF) {
-        if (strcmp(flag, SEND_FLAG) == 0) {
-            state = SEND_STATE;
-        }
-        else if(strcmp(flag, YES_FLAG) == 0){
-            state = RECV_STATE;
-        }
-        else if(strcmp(flag, NO_FLAG) == 0){
-            state = NO_RECV_STATE;
-        }
-        else {
-            state = OTHER_STATE;
-        }
-        Sleep(20);
-    }
+    //while (scanf("%s", flag) != EOF) {
+    //    if (strcmp(flag, SEND_FLAG) == 0) {
+    //        state = SEND_STATE;
+    //    }
+    //    else if(strcmp(flag, YES_FLAG) == 0){
+    //        state = RECV_STATE;
+    //    }
+    //    else if(strcmp(flag, NO_FLAG) == 0){
+    //        state = NO_RECV_STATE;
+    //    }
+    //    else {
+    //        state = OTHER_STATE;
+    //        printf("输入错误，请重新输入\n");
+    //    }
+    //    Sleep(20);
+    //}
     send_thread.join();
     recv_thread.join();
 
