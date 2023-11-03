@@ -11,6 +11,7 @@
 #include <thread>
 #include <regex>
 
+extern int state;
 char* get_filename(char* p)
 {
     char ch = '\\';
@@ -21,10 +22,9 @@ char* get_filename(char* p)
 
 const char* get_prompt_filename(char *prompt) {
     std::string prompt_string(prompt);
-    std::regex filename_pattern("you (.*),");
     std::smatch matches;
     const char* prompt_filename = NULL;
-    if (std::regex_search(prompt_string, matches, filename_pattern)) {
+    if (std::regex_search(prompt_string, matches, FILENAME_PATTERN)) {
         if(matches.size() > 1){
             std::string matched_filename = matches[1];
             prompt_filename = matched_filename.c_str();
@@ -35,7 +35,6 @@ const char* get_prompt_filename(char *prompt) {
 
 bool is_receive(SOCKET sock, char * file_full_path) {
     char flag[4];
-    char yes[4] = "yes";
     size_t str_len;
     char *filename = get_filename(file_full_path);
     size_t prompt_len = strlen(USERNAME) + strlen(SEND_PROMPT1) + strlen(filename) + strlen(SEND_PROMPT2);
@@ -54,7 +53,7 @@ bool is_receive(SOCKET sock, char * file_full_path) {
         printf("recv() error - is_receive()\n");
     }
     else {
-        if (strcmp(flag, yes) == 0) return true;
+        if (strcmp(flag, YES_FLAG) == 0) return true;
     }
     free(prompt);
     return false;
@@ -73,18 +72,15 @@ void send_file() {
     char full_path[100];
 
     struct sockaddr_in recv_addr;
+    char flag[5];
     while (1) {
-        char flag[5];
-        printf("-------------若你需要传输文件，请输入%s, 并按回车--------------\n", SEND_FLAG);
-        scanf("%s", flag);
-        if (strcmp(flag, SEND_FLAG) == 0) {
-
+        if (state == SEND_STATE) {
             // 还需判断IP的有效性
             printf("请输入你要连接的目的IP：");
             scanf("%s", addr);
 
             // 需判断文件绝对路径的有效性
-            printf("请输入你要传输的文件绝对路径：");
+            printf("请输入你要传输文件的绝对路径：");
             scanf("%s", full_path);
 
             memset(&recv_addr, 0, sizeof(recv_addr));
@@ -104,10 +100,8 @@ void send_file() {
             else {
                 printf("对方拒绝了你的文件传输请求");
             }
-        }
-        else {
-            printf("输入错误，请重新输入\n");
-            continue;
+
+            state = OTHER_STATE;   //涉及到对共享区的操作，应上锁
         }
     }
 }
@@ -137,16 +131,12 @@ void receive_file() {
 
     if (bind(recv_sock, (SOCKADDR*)&recv_addr, sizeof(SOCKADDR)) == SOCKET_ERROR) {
         printf("bind() error\n");
-    }
-    else {
-        printf("套接字绑定成功\n");
+        return;
     }
 
     if (listen(recv_sock, 5) == SOCKET_ERROR) {
         printf("listen() error\n");
-    }
-    else {
-        printf("套接字正在监听\n");
+        return;
     }
 
     send_addr_len = sizeof(send_addr);
@@ -156,6 +146,7 @@ void receive_file() {
         send_sock = accept(recv_sock, (struct sockaddr*)&send_addr, &send_addr_len);
         if (send_sock == INVALID_SOCKET) {
             printf("accept() error\n");
+            return;
         }
 
         str_len = recv(send_sock, prompt, sizeof(prompt) - 1, 0);
@@ -164,10 +155,9 @@ void receive_file() {
             return;
         }
         printf("%s", prompt);
-        scanf("%s", flag);
 
-        send(recv_sock, flag, sizeof(flag), 0);
-        if (strcmp(flag, yes_flag) == 0) {
+        if (state == RECV_STATE) {
+            send(recv_sock, YES_FLAG, sizeof(flag), 0);
             const char* file_name = get_prompt_filename(prompt);
             str_len = recv(send_sock, file_content, sizeof(file_content) - 1, 0);
             if (str_len <= 0) {
@@ -181,8 +171,14 @@ void receive_file() {
             printf("接收文件成功，文件保存至：%s\n", full_path);
             printf("message from client : %s \n", file_content);
             // write(clnt_sock, message, sizeof(message));
+            closesocket(send_sock);
+
+            state = OTHER_STATE;
         }
-        closesocket(send_sock);
+        else if (state == NO_RECV_STATE) {
+            send(recv_sock, NO_FLAG, sizeof(flag), 0);
+            state = OTHER_STATE;
+        }
     }
     // 关闭套接字
     closesocket(recv_sock);

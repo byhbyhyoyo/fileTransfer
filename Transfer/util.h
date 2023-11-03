@@ -1,6 +1,6 @@
 #pragma once
-#ifndef UTIL
-#define UTIL
+#ifndef MY_UTIL_H
+#define MY_UTIL_H
 #include <winsock.h>
 static int file_size;
 char* get_file_content(char* full_path);

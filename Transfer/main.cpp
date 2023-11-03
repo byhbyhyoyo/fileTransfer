@@ -1,9 +1,11 @@
 #include "util.h"
+#include "config.h"
 #include <stdio.h>
 #include <thread>
 
 // 要求输入是IP号（可输入多组），端口号固定  
 // 
+int state = OTHER_STATE;
 int main() {
 
     WSADATA wsa;
@@ -15,12 +17,27 @@ int main() {
     else {
         printf("初始化套接字库成功");
     }
+    printf("-------------你已经成功上线，你的用户名是%s--------------",USERNAME);
+    printf("-------------若你需要传输文件，请输入%s, 并按回车--------------\n", SEND_FLAG);
+    char flag[5];
+    memset(flag, '\0', sizeof(flag));
 
-    // 根据输入判断是一对一还是一对多
-
-    // 判断是局域网 还是 公网
     std::thread send_thread(send_file);
     std::thread recv_thread(receive_file);
+    while (scanf("%s", flag) != EOF) {
+        if (strcmp(flag, SEND_FLAG) == 0) {
+            state = SEND_STATE;
+        }
+        else if(strcmp(flag, YES_FLAG) == 0){
+            state = RECV_STATE;
+        }
+        else if(strcmp(flag, NO_FLAG) == 0){
+            state = NO_RECV_STATE;
+        }
+        else {
+            state = OTHER_STATE;
+        }
+    }
     send_thread.join();
     recv_thread.join();
 
