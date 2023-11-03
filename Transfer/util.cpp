@@ -100,7 +100,9 @@ void send_file() {
             char* file_content = get_file_content(full_path);
             char* file_name = get_filename(full_path);
 
-            send(send_sock, file_name, sizeof(*file_name), 0);
+            printf("file_name : %s", file_name);
+            printf("sizeof(*file_name): %d", strlen(file_name));
+            send(send_sock, file_name, strlen(file_name), 0);
             Sleep(3);
 
             send(send_sock, file_content, file_size, 0);
@@ -186,6 +188,7 @@ void receive_file() {
         char full_path[100] = "";
         strcat(full_path, RES_PATH);
         strcat(full_path, file_name);
+        printf("full_path: %s\n", full_path);
         write_file(full_path, file_content, str_len);
         printf("接收文件成功，文件保存至：%s\n", full_path);
         printf("message from client : %s \n", file_content);
@@ -224,6 +227,8 @@ char* get_file_content(char* full_path) {
 void write_file(char* full_path, char* file_content, int file_content_len) {
     FILE* fd;
     fd = fopen(full_path, "w");
-    fwrite(file_content, sizeof(char), file_content_len, fd);
+    if (fd != NULL) {
+        fwrite(file_content, sizeof(char), file_content_len, fd);
+    }
     fclose(fd);
 }
